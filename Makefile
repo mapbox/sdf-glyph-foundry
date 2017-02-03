@@ -1,25 +1,35 @@
-CXXFLAGS += -I include -std=c++14 -Wall -Wextra -Wshadow -O3 -fPIC
+CXXFLAGS += -I include -std=c++11 -Wall -Wextra -Wshadow -O3 -fPIC
 
 MASON ?= .mason/mason
-BOOST = boost 1.61.0
-FREETYPE = freetype 2.6
+BOOST_VERSION = 1.63.0
+FREETYPE_VERSION = 2.6.5
 
-DEPS = `$(MASON) cflags $(BOOST)` `$(MASON) cflags $(FREETYPE)`
-STATIC_LIBS = `$(MASON) static_libs $(FREETYPE)`
+MASON_INCLUDES = -isystem mason_packages/.link/include -isystem mason_packages/.link/include/freetype2
+
+STATIC_LIBS = $(shell $(MASON) static_libs freetype $(FREETYPE_VERSION))
 
 default: test
 
-mason_packages/headers/boost:
-	$(MASON) install $(BOOST)
-	$(MASON) install $(FREETYPE)
+$(MASON):
+	git submodule update --init
+
+mason_packages/.link/include/boost: $(MASON)
+	$(MASON) install boost $(BOOST_VERSION)
+	$(MASON) link boost $(BOOST_VERSION)
+
+mason_packages/.link/include/freetype:
+	$(MASON) install freetype $(FREETYPE_VERSION)
+	$(MASON) link freetype $(FREETYPE_VERSION)
+
+deps: mason_packages/.link/include/boost mason_packages/.link/include/freetype
 
 build:
 	mkdir -p build
 
 CFLAGS += -fvisibility=hidden
 
-build/test: test/test.cpp test/fonts/* test/fixtures/* mason_packages/headers/boost include/mapbox/* include/agg/* build
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(DEPS) $< $(STATIC_LIBS) -lz -o $@
+build/test: test/test.cpp test/fonts/* test/fixtures/* deps include/mapbox/* include/agg/* build
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(MASON_INCLUDES) $< $(STATIC_LIBS) -lz -o $@
 
 test: build/test
 	./build/test
