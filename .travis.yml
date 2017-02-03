@@ -1,0 +1,40 @@
+language: generic
+
+matrix:
+  include:
+    # linux g++ 6
+    - os: linux
+      sudo: false
+      env: CXX=g++-5
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'g++-6', 'libstdc++-6-dev' ]
+    # linux clang++ 3.9
+    - os: linux
+      sudo: false
+      env: CXX=clang++-3.9
+      addons:
+        apt:
+          sources: [ 'ubuntu-toolchain-r-test' ]
+          packages: [ 'libstdc++-4.9-dev' ]
+
+cache: apt
+
+install:
+  - git submodule update --init
+  - | 
+    if [[ ${CXX} =~ "clang" ]] && [[ $(uname -s) == "Linux" ]]; then
+      ./.mason/mason install clang++ 3.9.1
+      export PATH=$(./.mason/mason prefix clang++ 3.9.1)/bin:${PATH}
+      which clang++
+      ./.mason/mason install binutils 2.27
+      export PATH=$(./.mason/mason prefix binutils 2.27)/bin:${PATH}
+      which ld
+    fi
+
+script:
+  - BUILDTYPE=Release make
+  - make clean
+  - BUILDTYPE=Debug make
+

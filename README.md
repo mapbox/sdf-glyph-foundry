@@ -1,5 +1,7 @@
 # sdf-glyph-foundry
 
+[![Build Status](https://travis-ci.org/mapbox/sdf-glyph-foundry.svg?branch=master)](https://travis-ci.org/mapbox/sdf-glyph-foundry)
+
 A library that delivers glyphs rendered as SDFs (signed distance fields). We use these encoded glyphs as the basic blocks of font rendering in [Mapbox GL](https://github.com/mapbox/mapbox-gl-js). SDF encoding is superior to traditional fonts for our usecase in terms of scaling, rotation, and quickly deriving halos - WebGL doesn't have built-in font rendering, so the decision is between vectorization, which tends to be slow, and SDF generation.
 
 The approach this library takes is to parse and rasterize the font with Freetype (hence the C++ requirement), and then generate a distance field from that rasterized image.
