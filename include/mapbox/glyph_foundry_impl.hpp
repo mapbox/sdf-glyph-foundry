@@ -5,14 +5,10 @@
 #include <agg/agg_curves_impl.hpp>
 
 // boost
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wunused-local-typedef"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
-#pragma GCC diagnostic pop
 
 // std
 #include <cmath> // std::sqrt
