@@ -4,23 +4,29 @@ A library that delivers glyphs rendered as SDFs (signed distance fields). We use
 
 The approach this library takes is to parse and rasterize the font with Freetype (hence the C++ requirement), and then generate a distance field from that rasterized image.
 
-This library is used by [node-fontnik](https://github.com/mapbox/node-fontnik) to generate SDF glyphs on the server side, and also use it in [Mapbox GL Native](https://github.com/mapbox/mapbox-gl-native) to locally generate SDFs when a system font is available and appropriate.
+This library is used by [node-fontnik](https://github.com/mapbox/node-fontnik) to generate SDF glyphs on the server side, and may be used in the future in [Mapbox GL Native](https://github.com/mapbox/mapbox-gl-native) to locally generate SDFs when a system font is available and appropriate.
 
-## Installing
+## Using sdf-glyph-foundry
 
-By default, installs binaries. On these platforms no external dependencies are needed.
+The glyph foundry is a header-only library. To succesfully build it within your project you must also include Boost, Freetype, and Zlib. After pulling the include paths in to your project, use it like this:
 
-- 64 bit OS X or 64 bit Linux
-- Node.js v0.10.x, v0.12.x, v4.x or v6.x
+    #include <mapbox/glyph_foundry.hpp>
+    #include <mapbox/glyph_foundry_impl.hpp>
 
-However, other platforms will fall back to a source compile: see [building from source](#building-from-source) for details.
+    ...
 
-## Building from source
+    sdf_glyph_foundry::glyph_info glyph; // Fill with glyph request information
+    sdf_glyph_foundry::RenderSDF(glyph_info &glyph,
+                   int size,
+                   int buffer,
+                   float cutoff,
+                   FT_Face ft_face);
 
-```
-npm install --build-from-source
-```
-Building from source should automatically install `boost` and `freetype` locally using [mason](https://github.com/mapbox/mason). These dependencies can be installed manually by running `./scripts/install_mason.sh`.
+    // SDF bitmap is returned in glyph.bitmap
+
+## Testing
+
+`make test` should automatically install `boost` and `freetype` locally using [mason](https://github.com/mapbox/mason), and build a simple test harness that compares the library results to known SDFs.
 
 ## Background reading
 - [Drawing Text with Signed Distance Fields in Mapbox GL](https://www.mapbox.com/blog/text-signed-distance-fields/)
