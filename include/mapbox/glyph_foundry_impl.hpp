@@ -5,6 +5,7 @@
 #include <agg/agg_curves_impl.hpp>
 
 // boost
+#include <boost/container/small_vector.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -187,7 +188,7 @@ namespace sdf_glyph_foundry
     {
         const int squared_radius = radius * radius;
 
-        std::vector<SegmentValue> results;
+        boost::container::small_vector<SegmentValue, 64> results;
         tree.query(bgi::intersects(
             Box{
                 Point{p.get<0>() - radius, p.get<1>() - radius},
