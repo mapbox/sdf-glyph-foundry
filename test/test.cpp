@@ -41,7 +41,6 @@ std::string renderGlyph(FT_ULong code_point, std::string font_name) {
 
     FT_Face ft_face = 0;
     ft_face_guard face_guard(ft_face);
-    //FT_Error face_error = FT_New_Face(library, "test/fonts/Jost-Bold.ttf", 0, &ft_face);
     std::string path = "test/fonts/" + font_name + ".ttf";
     FT_Error face_error = FT_New_Face(library, path.c_str() , 0, &ft_face);
     if (face_error) {
@@ -91,9 +90,11 @@ int main(int argc, char** argv)
     for (int i = 64; i <= 90; ++i)
     {
         testGlyph(i, std::string(1, char(i)), "OpenSans-Regular");
+        testGlyph(i, std::string(1, char(i)), "Jost-Bold");
     }
     for (int i = 97; i <= 122; ++i)
     {
+        testGlyph(i, std::string(1, char(i)), "OpenSans-Regular");
         testGlyph(i, std::string(1, char(i)), "Jost-Bold");
     }
     std::cerr << "Done."<< std::endl;
