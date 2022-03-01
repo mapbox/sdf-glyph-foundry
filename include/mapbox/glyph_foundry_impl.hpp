@@ -130,23 +130,38 @@ namespace sdf_glyph_foundry
         return 0;
     }
 
-    // point in polygon ray casting algorithm
+    int is_left(Point const& p0, Point const& p1, Point const& p2)
+    {
+        double val = ( (p1.get<0>() - p0.get<0>()) * (p2.get<1>() - p0.get<1>())
+                       - (p2.get<0>() - p0.get<0>()) * (p1.get<1>() - p0.get<1>()) );
+        if (val > 0) return 1;
+        else if (val < 0) return -1;
+        else return 0;
+    }
+    // point in polygon winding number algorithm
     bool PolyContainsPoint(const Rings &rings, const Point &p)
     {
-        bool c = false;
-
-        for (const Points &ring : rings) {
+        int winding_number = 0;
+        for (Points const&ring : rings) {
             auto p1 = ring.begin();
             auto p2 = p1 + 1;
-
-            for (; p2 != ring.end(); p1++, p2++) {
-                if (((p1->get<1>() > p.get<1>()) != (p2->get<1>() > p.get<1>())) && (p.get<0>() < (p2->get<0>() - p1->get<0>()) * (p.get<1>() - p1->get<1>()) / (p2->get<1>() - p1->get<1>()) + p1->get<0>())) {
-                    c = !c;
+            for (; p2 != ring.end(); ++p1, ++p2)
+            {
+                if ( p1->get<1>() <= p.get<1>())
+                {
+                    if (p2->get<1>() > p.get<1>()) //an upward crossing
+                        if (is_left(*p1, *p2, p) > 0 ) // p is left of edge
+                            ++winding_number; //upward intersect
+                }
+                else
+                {
+                    if (p2->get<1>() <= p.get<1>()) // an downward crossing
+                        if (is_left(*p1, *p2, p) < 0) // p is right of edge
+                            --winding_number; //downward intersect
                 }
             }
         }
-
-        return c;
+        return (winding_number != 0);
     }
 
     double SquaredDistance(const Point &v, const Point &w)
@@ -265,6 +280,7 @@ namespace sdf_glyph_foundry
         double bbox_xmax = -std::numeric_limits<double>::infinity(),
                bbox_ymax = -std::numeric_limits<double>::infinity();
 
+
         for (const Points &ring : user.rings) {
             for (const Point &point : ring) {
                 if (point.get<0>() > bbox_xmax) bbox_xmax = point.get<0>();
@@ -288,7 +304,6 @@ namespace sdf_glyph_foundry
         }
 
         if (bbox_xmax - bbox_xmin == 0 || bbox_ymax - bbox_ymin == 0) return;
-
         glyph.left = bbox_xmin;
         glyph.top = bbox_ymax;
         glyph.width = bbox_xmax - bbox_xmin;
@@ -321,13 +336,11 @@ namespace sdf_glyph_foundry
                 });
             }
         }
-
         // Loop over every pixel and determine the positive/negative distance to the outline.
         unsigned int buffered_width = glyph.width + 2 * buffer;
         unsigned int buffered_height = glyph.height + 2 * buffer;
         unsigned int bitmap_size = buffered_width * buffered_height;
         glyph.bitmap.resize(bitmap_size);
-
         for (unsigned int y = 0; y < buffered_height; y++) {
             for (unsigned int x = 0; x < buffered_width; x++) {
                 unsigned int ypos = buffered_height - y - 1;
