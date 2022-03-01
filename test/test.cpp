@@ -30,7 +30,7 @@ struct ft_face_guard {
     FT_Face face_;
 };
 
-std::string renderGlyph(FT_ULong code_point) {
+std::string renderGlyph(FT_ULong code_point, std::string font_name) {
     FT_Library library = nullptr;
     ft_library_guard library_guard(library);
     FT_Error error = FT_Init_FreeType(&library);
@@ -41,13 +41,15 @@ std::string renderGlyph(FT_ULong code_point) {
 
     FT_Face ft_face = 0;
     ft_face_guard face_guard(ft_face);
-    FT_Error face_error = FT_New_Face(library, "test/fonts/OpenSans-Regular.ttf", 0, &ft_face);
+    //FT_Error face_error = FT_New_Face(library, "test/fonts/Jost-Bold.ttf", 0, &ft_face);
+    std::string path = "test/fonts/" + font_name + ".ttf";
+    FT_Error face_error = FT_New_Face(library, path.c_str() , 0, &ft_face);
     if (face_error) {
         fprintf(stderr,"could not open font");
         return "";
     }
 
-    const double scale_factor = 1.0;
+    const double scale_factor = 4.0;
 
     // Set character sizes.
     double size = 24 * scale_factor;
@@ -64,21 +66,36 @@ std::string renderGlyph(FT_ULong code_point) {
     }
 
     glyph.glyph_index = char_index;
-    sdf_glyph_foundry::RenderSDF(glyph, 24, 3, 0.25, ft_face);
+    sdf_glyph_foundry::RenderSDF(glyph, size, 3, 0.25, ft_face);
     return glyph.bitmap;
 };
 
-void testGlyph(FT_ULong code_point, const std::string& name) {
-    std::string bitmap = renderGlyph(code_point);
-
-    std::ifstream t(("test/fixtures/" + name).c_str());
-    std::stringstream buffer;
-    buffer << t.rdbuf();
-
-    assert(buffer.str() == bitmap);
+void testGlyph(FT_ULong code_point, std::string const& name, std::string const& font_name) {
+    std::string bitmap = renderGlyph(code_point, font_name);
+    std::ifstream t(("test/fixtures/" + font_name + "/" + name).c_str());
+    if (!t) {
+        std::ofstream output(("test/fixtures/" + font_name + "/" + name).c_str(), std::ios::binary);
+        output << bitmap;
+        output.close();
+    }
+    else {
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        assert(buffer.str() == bitmap);
+    }
 };
 
-int main() {
-    testGlyph(41, "A");
+int main(int argc, char** argv)
+{
+    // test some printable ASCII
+    for (int i = 64; i <= 90; ++i)
+    {
+        testGlyph(i, std::string(1, char(i)), "OpenSans-Regular");
+    }
+    for (int i = 97; i <= 122; ++i)
+    {
+        testGlyph(i, std::string(1, char(i)), "Jost-Bold");
+    }
+    std::cerr << "Done."<< std::endl;
     return 0;
 }
